@@ -1,4 +1,4 @@
-package org.inigma.shared.mongo;
+package org.inigma.lwrest.mongo;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;

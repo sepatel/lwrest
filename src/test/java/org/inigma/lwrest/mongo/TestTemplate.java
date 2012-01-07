@@ -1,4 +1,4 @@
-package org.inigma.shared.mongo;
+package org.inigma.lwrest.mongo;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.WriteConcern;

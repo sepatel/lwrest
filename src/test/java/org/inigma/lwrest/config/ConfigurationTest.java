@@ -1,4 +1,4 @@
-package org.inigma.shared.config;
+package org.inigma.lwrest.config;
 
 import static org.junit.Assert.*;
 
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.inigma.shared.mongo.MongoDataStore;
+import org.inigma.lwrest.mongo.MongoDataStore;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

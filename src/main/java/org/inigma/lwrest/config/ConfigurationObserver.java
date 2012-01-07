@@ -1,4 +1,4 @@
-package org.inigma.shared.config;
+package org.inigma.lwrest.config;
 
 /**
  * Hook for being notified of updates to a configuration.

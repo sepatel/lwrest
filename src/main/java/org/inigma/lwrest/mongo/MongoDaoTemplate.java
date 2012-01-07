@@ -1,4 +1,4 @@
-package org.inigma.shared.mongo;
+package org.inigma.lwrest.mongo;
 
 import java.io.Serializable;
 import java.util.ArrayList;

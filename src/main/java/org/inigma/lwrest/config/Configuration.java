@@ -1,4 +1,4 @@
-package org.inigma.shared.config;
+package org.inigma.lwrest.config;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.inigma.shared.mongo.MongoDataStore;
+import org.inigma.lwrest.mongo.MongoDataStore;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;

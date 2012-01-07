@@ -1,9 +1,9 @@
-package org.inigma.shared.message;
+package org.inigma.lwrest.message;
 
 import java.util.Collection;
 
-import org.inigma.shared.mongo.DBObjectWrapper;
-import org.inigma.shared.mongo.MongoDaoTemplate;
+import org.inigma.lwrest.mongo.DBObjectWrapper;
+import org.inigma.lwrest.mongo.MongoDaoTemplate;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

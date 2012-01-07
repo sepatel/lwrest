@@ -1,4 +1,4 @@
-package org.inigma.shared.message;
+package org.inigma.lwrest.message;
 
 public class Message {
     private String code;

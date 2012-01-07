@@ -1,4 +1,4 @@
-package org.inigma.shared.webapp;
+package org.inigma.lwrest.webapp;
 
 import java.io.IOException;
 
