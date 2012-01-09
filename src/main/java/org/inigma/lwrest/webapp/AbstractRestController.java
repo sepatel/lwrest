@@ -5,7 +5,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,30 +27,50 @@ import org.json.JSONWriter;
  * @author <a href="mailto:sejal@inigma.org">Sejal Patel</a>
  */
 public abstract class AbstractRestController extends HttpServlet {
-    protected final Logger logger = Logger.getLogger(getClass().getName());
-    // private static MessageDaoTemplate messageTemplate = new MessageDaoTemplate();
-    private Map<Class, Set<RestMapping>> mappings;
-
     private class RestMapping {
-        public String pattern;
         public Method method;
+        public String pattern;
+
+        public RestMapping(Method m, String p) {
+            this.method = m;
+            this.pattern = p;
+        }
     }
+
+    protected final Logger logger = Logger.getLogger(getClass().getName());
+
+    private Set<RestMapping> getMappings = new HashSet<RestMapping>();
+    private Set<RestMapping> postMappings = new HashSet<RestMapping>();
+    private Set<RestMapping> putMappings = new HashSet<RestMapping>();
+    private Set<RestMapping> deleteMappings = new HashSet<RestMapping>();
+
+    private ThreadLocal<HttpServletRequest> request;
 
     @Override
     public void init() throws ServletException {
         super.init();
-        mappings = new HashMap<Class, Set<RestMapping>>();
-        mappings.put(GET.class, new HashSet<RestMapping>());
+        this.request = new ThreadLocal<HttpServletRequest>();
         for (Method method : getClass().getMethods()) {
             for (Annotation annotation : method.getAnnotations()) {
-                Set<RestMapping> mapping = mappings.get(annotation.getClass());
                 if (GET.class.isInstance(annotation)) {
                     GET g = (GET) annotation;
                     for (String value : g.value()) {
-                        RestMapping rm = new RestMapping();
-                        rm.pattern = value;
-                        rm.method = method;
-                        mapping.add(rm);
+                        getMappings.add(new RestMapping(method, value));
+                    }
+                } else if (POST.class.isInstance(annotation)) {
+                    POST g = (POST) annotation;
+                    for (String value : g.value()) {
+                        postMappings.add(new RestMapping(method, value));
+                    }
+                } else if (PUT.class.isInstance(annotation)) {
+                    PUT g = (PUT) annotation;
+                    for (String value : g.value()) {
+                        putMappings.add(new RestMapping(method, value));
+                    }
+                } else if (DELETE.class.isInstance(annotation)) {
+                    DELETE g = (DELETE) annotation;
+                    for (String value : g.value()) {
+                        deleteMappings.add(new RestMapping(method, value));
                     }
                 }
             }
@@ -60,21 +79,12 @@ public abstract class AbstractRestController extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        processMapping(req, resp, deleteMappings);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doGet(req, resp);
-        for (RestMapping mapping : mappings.get(GET.class)) {
-            if (mapping.pattern.equals(req.getRequestURI())) {
-                try {
-                    mapping.method.invoke(this);
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "Something bad happened", e);
-                }
-            }
-        }
+        processMapping(req, resp, getMappings);
     }
 
     @Override
@@ -89,12 +99,12 @@ public abstract class AbstractRestController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+        processMapping(req, resp, postMappings);
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        processMapping(req, resp, putMappings);
     }
 
     @Override
@@ -102,11 +112,13 @@ public abstract class AbstractRestController extends HttpServlet {
         super.doTrace(req, resp);
     }
 
-    protected void response(HttpServletResponse response, Object data) {
-        // protected void response(Writer w, Object data) {
+    protected void response(HttpServletRequest request, HttpServletResponse response) {
         response.setContentType("application/json");
         // List<ObjectError> errors = getErrors().getAllErrors();
         try {
+            Object data = request.getAttribute("_data");
+            Exception exception = (Exception) request.getAttribute("_exception");
+            boolean success = exception == null;
             JSONWriter writer = new JSONWriter(response.getWriter()).object();
             // if (hasNoErrors()) {
             writer.key("data");
@@ -121,7 +133,10 @@ public abstract class AbstractRestController extends HttpServlet {
                 writer.value(new JSONObject(data));
             }
             // }
-            writer.key("success").value(true);
+            writer.key("success").value(success);
+            if (exception != null) {
+                writer.key("exception").value(exception.getMessage());
+            }
             // writer.key("success").value(hasNoErrors());
             // writer.key("errors").array();
             // for (ObjectError error : errors) {
@@ -143,6 +158,53 @@ public abstract class AbstractRestController extends HttpServlet {
         } catch (IOException e) {
             logger.log(Level.WARNING, "Unable to generate response", e);
             throw new RuntimeException("Error responding with errors", e);
+        }
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.request.set(req);
+        try {
+            super.service(req, resp);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Unhandled Exception", e);
+            req.setAttribute("_exception", e);
+        }
+        response(req, resp);
+        this.request.remove();
+    }
+
+    private void processMapping(HttpServletRequest req, HttpServletResponse resp, Set<RestMapping> mappings) {
+        boolean handled = false;
+        for (RestMapping mapping : mappings) {
+            PathParameters pp = new PathParameters();
+            if (mapping.pattern.equals(req.getPathInfo())) {
+                try {
+                    handled = true;
+                    Class<?>[] parameterTypes = mapping.method.getParameterTypes();
+                    Object[] parameters = new Object[parameterTypes.length];
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        if (parameterTypes[i].isAssignableFrom(PathParameters.class)) {
+                            parameters[i] = pp;
+                        } else if (parameterTypes[i].isAssignableFrom(HttpServletRequest.class)) {
+                            parameters[i] = req;
+                        } else if (parameterTypes[i].isAssignableFrom(HttpServletResponse.class)) {
+                            parameters[i] = resp;
+                        } else {
+                            logger.log(Level.WARNING, "Parameter type: " + parameterTypes[i].getClass()
+                                    + " is not handled!");
+                        }
+                    }
+
+                    mapping.method.invoke(this, parameters);
+                } catch (Exception e) {
+                    req.setAttribute("_exception", e);
+                    logger.log(Level.SEVERE, "Something bad happened", e);
+                }
+            }
+        }
+        if (!handled) {
+            req.setAttribute("_exception", new IllegalAccessException("Invalid mapping: " + req.getMethod() + " " + req.getPathInfo()));
         }
     }
 }
