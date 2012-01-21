@@ -19,11 +19,8 @@ class RequestMapping {
         StringBuffer sb = new StringBuffer("^");
         Matcher matcher = PATH_PATTERN.matcher(pattern);
         while (matcher.find()) {
-            System.out.println("Matcher Found: " + matcher);
             this.pathVariables.add(matcher.group(1));
-            System.out.println("Path Variables: " + this.pathVariables);
             matcher.appendReplacement(sb, PATH_VARIABLE);
-            System.out.println("Pattern String: " + sb);
         }
         matcher.appendTail(sb);
         sb.append("$");
@@ -41,7 +38,6 @@ class RequestMapping {
     public PathParameters matches(String path) {
         Matcher matcher = pattern.matcher(path);
         if (matcher.find()) {
-            System.out.printf("%s Matches My Pattern of %s\n", path, getPattern());
             PathParameters pp = new PathParameters();
             for (int i = 0; i < pathVariables.size(); i++) {
                 pp.set(pathVariables.get(i), matcher.group(i + 1));
