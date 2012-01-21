@@ -126,8 +126,8 @@ public abstract class AbstractRestController extends HttpServlet {
     private void processMapping(HttpServletRequest req, HttpServletResponse resp, Set<RequestMapping> mappings) {
         Method method = null;
         for (RequestMapping mapping : mappings) {
-            PathParameters pp = new PathParameters();
-            if (mapping.getPattern().equals(req.getPathInfo())) {
+            PathParameters pp = mapping.matches(req.getPathInfo());
+            if (pp != null) {
                 try {
                     method = mapping.getMethod();
                     Class<?>[] parameterTypes = method.getParameterTypes();

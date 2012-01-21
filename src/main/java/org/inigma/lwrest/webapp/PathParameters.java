@@ -47,4 +47,8 @@ public class PathParameters {
     public Set<String> keys() {
         return params.keySet();
     }
+
+    void set(String key, String value) {
+        params.put(key, value);
+    }
 }
