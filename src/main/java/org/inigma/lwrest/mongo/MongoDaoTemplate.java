@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.inigma.lwrest.SingletonHolder;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -25,7 +27,7 @@ public abstract class MongoDaoTemplate<T> {
     protected final String collection;
 
     public MongoDaoTemplate(String collection) {
-        this(MongoDataStore.getSingleton(), collection);
+        this(SingletonHolder.getDataStore(), collection);
     }
 
     public MongoDaoTemplate(MongoDataStore mds, String collection) {

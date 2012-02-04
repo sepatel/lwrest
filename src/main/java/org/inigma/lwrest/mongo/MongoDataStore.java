@@ -1,8 +1,11 @@
 package org.inigma.lwrest.mongo;
 
+import java.net.UnknownHostException;
+
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.mongodb.ReadPreference;
 import com.mongodb.gridfs.GridFS;
@@ -13,26 +16,27 @@ import com.mongodb.gridfs.GridFS;
  * @author <a href="mailto:sejal@inigma.org">Sejal Patel</a>
  */
 public class MongoDataStore {
-    private static MongoDataStore singleton;
-
-    public static MongoDataStore getSingleton() {
-        return singleton;
-    }
-
     private DB db;
     private Mongo mongo;
 
-    public MongoDataStore(String uri) throws Exception {
+    public MongoDataStore(String uri) {
         MongoURI mongoUri = new MongoURI(uri);
-        this.mongo = new Mongo(mongoUri);
-        this.db = mongo.getDB(mongoUri.getDatabase());
-        if (singleton == null) {
-            singleton = this;
+        try {
+            this.mongo = new Mongo(mongoUri);
+        } catch (UnknownHostException e) {
+            throw new MongoException("Unknown host", e);
         }
+        this.db = mongo.getDB(mongoUri.getDatabase());
     }
 
     public void endSession() {
         this.db.requestDone();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        this.mongo.close();
+        super.finalize();
     }
 
     public DBCollection getCollection(String name) {
@@ -69,11 +73,5 @@ public class MongoDataStore {
 
     public void startSession() {
         this.db.requestStart();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        this.mongo.close();
-        super.finalize();
     }
 }
