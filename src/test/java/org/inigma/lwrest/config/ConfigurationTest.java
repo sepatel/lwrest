@@ -1,6 +1,10 @@
 package org.inigma.lwrest.config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,13 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.inigma.lwrest.mongo.MongoDataStore;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 
 public class ConfigurationTest {
     private static class TestListener implements ConfigurationObserver {
@@ -26,14 +25,7 @@ public class ConfigurationTest {
         }
     }
 
-    private static MongoDataStore mds;
-
-    @BeforeClass
-    public static void initialization() throws Exception {
-        mds = new MongoDataStore("mongodb://192.168.1.100/junit");
-    }
-
-    private Configuration config;
+    private AbstractConfiguration config;
 
     @Test(expected = IllegalStateException.class)
     public void keyNotFound() {
@@ -109,13 +101,10 @@ public class ConfigurationTest {
         config.set("reload", "my original value");
         TestListener tl = new TestListener();
         config.addObserver(tl);
-        DBCollection collection = mds.getCollection("config");
-        BasicDBObject object = (BasicDBObject) collection.findOne(new BasicDBObject("_id", "reload"));
-        assertEquals("my original value", object.getString("value"));
-        object.put("value", "My NEW value");
-        collection.save(object);
-        assertFalse(tl.originals.containsKey("reload"));
-        config.reload();
+
+        Map<String, Object> newconfigs = new HashMap<String, Object>();
+        newconfigs.put("reload", "My NEW value");
+        config.reload(newconfigs);
         assertTrue(tl.originals.containsKey("reload"));
         assertEquals("My NEW value", config.getString("reload"));
         config.removeObserver(tl);
@@ -128,6 +117,15 @@ public class ConfigurationTest {
 
     @Before
     public void setup() {
-        config = Configuration.getSingleton();
+    	config = new AbstractConfiguration() {
+			@Override
+			protected void setValue(String key, Object value) {
+			}
+			
+			@Override
+			protected Object getValue(String key) {
+				return null;
+			}
+		};
     }
 }
