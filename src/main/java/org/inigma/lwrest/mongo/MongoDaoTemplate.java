@@ -14,6 +14,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
 /**
  * Mongo DAO Templating framework. Similar in intent to the spring jdbc template.
@@ -37,7 +38,7 @@ public abstract class MongoDaoTemplate<T> {
 
     protected MongoDaoTemplate() {
         // for @Cacheable annotation support. Should never be used actually.
-        this(null, null);
+        this(SingletonHolder.getDataStore(), null);
     }
 
     /**
@@ -87,6 +88,10 @@ public abstract class MongoDaoTemplate<T> {
 
     public DBCollection getCollection(boolean slave) {
         return pool.getCollection(collection, slave);
+    }
+    protected WriteResult upsert(DBObject object) {
+        BasicDBObject query = new BasicDBObject("_id", object.get("_id"));
+        return getCollection(false).update(query, object, true, false);
     }
 
     protected Collection<T> convert(final DBCursor cursor) {
