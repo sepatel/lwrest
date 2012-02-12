@@ -10,8 +10,11 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.inigma.lwrest.logger.Logger;
+
 public abstract class InjectionHolder {
     private static Map<String, Object> injectables = new LinkedHashMap<String, Object>();
+    private static Logger logger = Logger.getLogger(InjectionHolder.class);
 
     public static <T> T getInjectable(String id) {
         return (T) injectables.get(id);
@@ -42,7 +45,7 @@ public abstract class InjectionHolder {
         injectables.put(key, o);
     }
 
-    public static void inject(Object o) {
+    public static void injectFields(Object o) {
         if (o == null) {
             return;
         }
@@ -52,7 +55,7 @@ public abstract class InjectionHolder {
                 if (Inject.class.isInstance(annotation)) {
                     try {
                         Object injectable = getInjectable(field.getType());
-                        System.out.println("Injecting into " + o.getClass() + " field " + field.getName() + " object " + injectable);
+                        logger.debug("Injecting into %s field %s object %s", o.getClass(), field.getName(), injectable);
                         field.set(o, injectable);
                     } catch (IllegalAccessException e) {
                         throw new IllegalStateException("Field " + field.getName() + " is not writable!");
