@@ -8,14 +8,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.inigma.lwrest.logger.Logger;
 import org.inigma.lwrest.webapp.Response.Error;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,7 +27,8 @@ import org.json.JSONWriter;
  * @author <a href="mailto:sejal@inigma.org">Sejal Patel</a>
  */
 public abstract class AbstractRestController extends HttpServlet {
-    protected final Logger logger = Logger.getLogger(getClass().getName());
+//    protected final Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = new Logger(getClass());
 
     private Set<RequestMapping> deleteMappings = new HashSet<RequestMapping>();
     private Set<RequestMapping> getMappings = new HashSet<RequestMapping>();
@@ -116,7 +116,7 @@ public abstract class AbstractRestController extends HttpServlet {
         try {
             super.service(req, resp);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unhandled Exception", e);
+            logger.error("Unhandled Exception: ", e);
             responseBean.reject(e);
         }
         response(req, resp);
@@ -140,14 +140,13 @@ public abstract class AbstractRestController extends HttpServlet {
                         } else if (parameterTypes[i].isAssignableFrom(HttpServletResponse.class)) {
                             parameters[i] = resp;
                         } else {
-                            logger.log(Level.WARNING, "Parameter type: " + parameterTypes[i].getClass()
-                                    + " is not handled!");
+                            logger.warn("Parameter type '%s' is not handled!", parameterTypes[i].getClass());
                         }
                     }
 
                     method.invoke(this, parameters);
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Something bad happened", e);
+                    logger.error("Something bad happened", e);
                     getResponse().reject(e);
                 }
             }
@@ -189,10 +188,10 @@ public abstract class AbstractRestController extends HttpServlet {
             writer.endArray();
             writer.endObject();
         } catch (JSONException e) {
-            logger.log(Level.WARNING, "Unable to generate response", e);
+            logger.warn("Unable to generate response", e);
             throw new RuntimeException("Error responding with errors", e);
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Unable to generate response", e);
+            logger.warn("Unable to generate response", e);
             throw new RuntimeException("Error responding with errors", e);
         }
     }
