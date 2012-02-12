@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.inigma.lwrest.SingletonHolder;
+import javax.inject.Inject;
+
+import org.inigma.lwrest.InjectionHolder;
 import org.inigma.lwrest.mongo.MongoDataStore;
 
 import com.mongodb.BasicDBObject;
@@ -27,12 +29,13 @@ public class MongoConfiguration extends AbstractConfiguration {
     private static final String VALUE = "value";
     private static final Timer TIMER = new Timer(true);
 
+    @Inject
     private final MongoDataStore ds;
     private final String collection;
     private TimerTask reloadTask;
 
     public MongoConfiguration() {
-        this(SingletonHolder.getDataStore(), "config");
+        this(InjectionHolder.getInjectable(MongoDataStore.class), "config");
     }
 
     public MongoConfiguration(MongoDataStore ds) {
@@ -47,7 +50,7 @@ public class MongoConfiguration extends AbstractConfiguration {
     }
 
     public MongoConfiguration(String collection) {
-        this(SingletonHolder.getDataStore(), collection);
+        this(InjectionHolder.getInjectable(MongoDataStore.class), collection);
     }
 
     @Override
@@ -100,5 +103,4 @@ public class MongoConfiguration extends AbstractConfiguration {
         data.put(VALUE, value);
         ds.getCollection(collection).update(query, data, true, false);
     }
-
 }

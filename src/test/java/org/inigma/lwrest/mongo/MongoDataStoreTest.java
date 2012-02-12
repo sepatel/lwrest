@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Random;
 
-import org.inigma.lwrest.SingletonHolder;
+import org.inigma.lwrest.InjectionHolder;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class MongoDataStoreTest {
     @BeforeClass
     public static void initialization() throws Exception {
         mds = new MongoDataStore("mongodb://192.168.1.100/junit");
-        SingletonHolder.setDataStore(mds);
+        InjectionHolder.addInjectable(mds);
     }
 
     private TestTemplate template;

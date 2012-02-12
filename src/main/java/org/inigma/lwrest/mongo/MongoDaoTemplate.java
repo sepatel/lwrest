@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import org.inigma.lwrest.SingletonHolder;
+import javax.inject.Inject;
+
+import org.inigma.lwrest.InjectionHolder;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -24,11 +26,12 @@ import com.mongodb.WriteResult;
 public abstract class MongoDaoTemplate<T> {
     protected Logger logger = Logger.getLogger(getClass().getName());
 
-    protected final MongoDataStore pool;
-    protected final String collection;
+    @Inject
+    protected MongoDataStore pool;
+    protected String collection;
 
     public MongoDaoTemplate(String collection) {
-        this(SingletonHolder.getDataStore(), collection);
+        this(InjectionHolder.getInjectable(MongoDataStore.class), collection);
     }
 
     public MongoDaoTemplate(MongoDataStore mds, String collection) {
@@ -38,7 +41,6 @@ public abstract class MongoDaoTemplate<T> {
 
     protected MongoDaoTemplate() {
         // for @Cacheable annotation support. Should never be used actually.
-        this(SingletonHolder.getDataStore(), null);
     }
 
     /**

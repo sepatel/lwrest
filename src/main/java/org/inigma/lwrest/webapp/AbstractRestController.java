@@ -11,11 +11,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.inigma.lwrest.InjectionHolder;
+import org.inigma.lwrest.message.Message;
+import org.inigma.lwrest.message.MessageDaoTemplate;
 import org.inigma.lwrest.webapp.Response.Error;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,12 +34,19 @@ import org.json.JSONWriter;
 public abstract class AbstractRestController extends HttpServlet {
     protected final Logger logger = Logger.getLogger(getClass().getName());
 
+    @Inject
+    private MessageDaoTemplate messageTemplate;
+
     private Set<RequestMapping> deleteMappings = new HashSet<RequestMapping>();
     private Set<RequestMapping> getMappings = new HashSet<RequestMapping>();
     private Set<RequestMapping> postMappings = new HashSet<RequestMapping>();
     private Set<RequestMapping> putMappings = new HashSet<RequestMapping>();
 
     private ThreadLocal<Response> response;
+
+    public AbstractRestController() {
+        InjectionHolder.inject(this);
+    }
 
     @Override
     public void init() throws ServletException {
@@ -183,7 +194,16 @@ public abstract class AbstractRestController extends HttpServlet {
                     writer.key("field").value(error.getParameter());
                 }
                 writer.key("code").value(error.getCode());
-                writer.key("message").value(error.getMessage());
+                if (messageTemplate != null) {
+                    Message message = messageTemplate.findById(error.getCode(), null);
+                    if (message != null) {
+                        writer.key("message").value(message.getValue());
+                    } else {
+                        writer.key("message").value(error.getMessage());
+                    }
+                } else {
+                    writer.key("message").value(error.getMessage());
+                }
                 writer.endObject();
             }
             writer.endArray();
