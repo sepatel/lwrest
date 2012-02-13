@@ -162,8 +162,7 @@ public abstract class AbstractRestController extends HttpServlet {
             }
         }
         if (method == null) {
-            req.setAttribute("_exception",
-                    new IllegalAccessException("Invalid mapping: " + req.getMethod() + " " + req.getPathInfo()));
+            getResponse().reject("invalid.requestMapping", req.getMethod() + " " + req.getPathInfo());
         }
     }
 
