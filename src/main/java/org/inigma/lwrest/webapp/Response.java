@@ -51,7 +51,11 @@ public class Response {
     }
 
     public void reject(Exception e) {
-        this.errors.add(new Error(null, e.getClass().getName(), e.getMessage()));
+        Throwable t = null;
+        while (e.getCause() != null && e.getCause() != t) {
+            t = e.getCause();
+        }
+        this.errors.add(new Error(null, t.getClass().getName(), t.getMessage()));
     }
 
     public void reject(String code) {
