@@ -92,8 +92,9 @@ public abstract class MongoDaoTemplate<T> {
         return pool.getCollection(collection, slave);
     }
     protected WriteResult upsert(DBObject object) {
-        BasicDBObject query = new BasicDBObject("_id", object.get("_id"));
-        return getCollection(false).update(query, object, true, false);
+        BasicDBObject query = new BasicDBObject("_id", object.removeField("_id"));
+        BasicDBObject update = new BasicDBObject(object.toMap());
+        return getCollection(false).update(query, new BasicDBObject("$set", update), true, false);
     }
 
     protected Collection<T> convert(final DBCursor cursor) {
