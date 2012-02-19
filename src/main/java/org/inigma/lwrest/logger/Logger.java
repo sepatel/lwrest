@@ -60,6 +60,7 @@ public class Logger {
             if (args.length > 0 && args[args.length - 1] instanceof Throwable) {
                 log.setThrown((Throwable) args[args.length - 1]);
             }
+            inferCaller(log);
             logger.log(log);
         }
     }
@@ -70,5 +71,33 @@ public class Logger {
 
     public void warn(String pattern, Object... args) {
         log(WARN, pattern, args);
+    }
+
+    private void inferCaller(LogRecord log) {
+        // Get the stack trace.
+        StackTraceElement stack[] = (new Throwable()).getStackTrace();
+        // First, search back to a method in the Logger class.
+        int ix = 0;
+        while (ix < stack.length) {
+            StackTraceElement frame = stack[ix];
+            String cname = frame.getClassName();
+            if (cname.equals(getClass().getName())) {
+                break;
+            }
+            ix++;
+        }
+        // Now search for the first frame before the "Logger" class.
+        while (ix < stack.length) {
+            StackTraceElement frame = stack[ix];
+            String cname = frame.getClassName();
+            if (!cname.equals(getClass().getName())) {
+                // We've found the relevant frame.
+                log.setSourceClassName(cname);
+                log.setSourceMethodName(frame.getMethodName());
+                return;
+            }
+            ix++;
+        }
+        // We haven't found a suitable frame, so just punt.
     }
 }
