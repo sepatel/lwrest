@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 class RequestMapping {
     private static final Pattern PATH_PATTERN = Pattern.compile("/\\{(\\w+?)\\}");
-    private static final String PATH_VARIABLE = "/(\\\\w+?)";
+    private static final String PATH_VARIABLE = "/([\\\\w\\\\.\\\\-]+?)";
     private final Method method;
     private final Pattern pattern;
     private final List<String> pathVariables;

@@ -33,4 +33,13 @@ public class RequestMappingTest {
         assertEquals("john", parameters.getString("name"));
         assertEquals("doe", parameters.getString("id"));
     }
+
+    @Test
+    public void negativeNumbers() {
+        RequestMapping mapping = new RequestMapping(null, "/rank/{account}/{league}/{week}");
+        assertNull(mapping.matches("/rank"));
+        assertNull(mapping.matches("/rank/CPA/Cool"));
+        assertNotNull(mapping.matches("/rank/CPA/Cool/3"));
+        assertNotNull(mapping.matches("/rank/CPA/Cool/-3"));
+    }
 }
