@@ -37,7 +37,7 @@ public class Response {
 
     private Object data;
     private Collection<Error> errors = new LinkedList<Error>();
-    private boolean success;
+    private boolean success = true;
 
     public Object getData() {
         return data;
@@ -57,22 +57,27 @@ public class Response {
             t = e.getCause();
         }
         this.errors.add(new Error(null, t.getClass().getName(), t.getMessage()));
+        this.success = false;
     }
 
     public void reject(String code) {
         this.errors.add(new Error(null, code, null));
+        this.success = false;
     }
 
     public void reject(String code, String message) {
         this.errors.add(new Error(null, code, message));
+        this.success = false;
     }
 
     public void rejectValue(String field, String code) {
         this.errors.add(new Error(field, code, null));
+        this.success = false;
     }
 
     public void rejectValue(String field, String code, String message) {
         this.errors.add(new Error(null, code, message));
+        this.success = false;
     }
 
     public void setData(Boolean data) {

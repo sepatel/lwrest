@@ -183,7 +183,7 @@ public abstract class AbstractRestController extends HttpServlet {
             } else if (data instanceof JsonResponse) {
                 ((JsonResponse) data).toJson(writer);
             } else {
-                writer.value(new JSONObject(data)); // toString
+                writer.value(new JSONObject(data).toString());
             }
             writer.key("success").value(responseBean.isSuccess());
             writer.key("errors").array();
