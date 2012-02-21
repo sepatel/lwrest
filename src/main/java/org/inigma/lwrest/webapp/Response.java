@@ -2,6 +2,7 @@ package org.inigma.lwrest.webapp;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class Response {
     class Error {
@@ -74,7 +75,27 @@ public class Response {
         this.errors.add(new Error(null, code, message));
     }
 
-    public void setData(Object data) {
+    public void setData(Boolean data) {
+        this.data = data;
+    }
+
+    public void setData(Collection<?> data) {
+        this.data = data;
+    }
+
+    public void setData(Map<String, ?> data) {
+        this.data = data;
+    }
+
+    public void setData(Number data) {
+        this.data = data;
+    }
+
+    public void setData(ResponseTransformer data) {
+        this.data = data;
+    }
+
+    public void setData(String data) {
         this.data = data;
     }
 
