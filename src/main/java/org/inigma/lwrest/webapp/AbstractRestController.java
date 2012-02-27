@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -20,7 +21,6 @@ import org.inigma.lwrest.logger.Logger;
 import org.inigma.lwrest.message.Message;
 import org.inigma.lwrest.message.MessageDaoTemplate;
 import org.inigma.lwrest.webapp.Response.Error;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -166,6 +166,39 @@ public abstract class AbstractRestController extends HttpServlet {
         }
     }
 
+    private void responseValue(JSONWriter writer, Object data) throws JSONException {
+        if (data == null) {
+            writer.value(null);
+        } else if (data instanceof String || data instanceof Number || data instanceof Boolean) {
+            writer.value(data);
+        } else if (data instanceof Map<?, ?>) {
+            Map<?, ?> map = (Map<?, ?>) data;
+            writer.object();
+            for (Entry<?, ?> entry : map.entrySet()) {
+                writer.key(entry.getKey().toString());
+                responseValue(writer, entry.getValue());
+            }
+            writer.endObject();
+        } else if (data instanceof Collection<?>) {
+            Collection<?> list = (Collection<?>) data;
+            writer.array();
+            for (Object o : list) {
+                responseValue(writer, o);
+            }
+            writer.endArray();
+        } else if (data instanceof Array) {
+            writer.array();
+            for (int i = 0; i < Array.getLength(data); i++) {
+                responseValue(writer, Array.get(data, i));
+            }
+            writer.endArray();
+        } else if (data instanceof JsonResponse) {
+            ((JsonResponse) data).toJson(writer);
+        } else {
+            writer.value(new JSONObject(data));
+        }
+    }
+
     private void response(HttpServletRequest request, HttpServletResponse response) {
         response.setContentType("application/json");
         try {
@@ -173,18 +206,7 @@ public abstract class AbstractRestController extends HttpServlet {
             Object data = responseBean.getData();
             JSONWriter writer = new JSONWriter(response.getWriter()).object();
             writer.key("data");
-            if (data == null) {
-                writer.value(null);
-            } else if (data instanceof String || data instanceof Number || data instanceof Boolean
-                    || data instanceof Map<?, ?>) {
-                writer.value(data);
-            } else if (data instanceof Collection<?> || data instanceof Array) {
-                writer.value(new JSONArray(data));
-            } else if (data instanceof JsonResponse) {
-                ((JsonResponse) data).toJson(writer);
-            } else {
-                writer.value(new JSONObject(data).toString());
-            }
+            responseValue(writer, data);
             writer.key("success").value(responseBean.isSuccess());
             writer.key("errors").array();
             for (Error error : responseBean.getErrors()) {
